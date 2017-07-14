@@ -182,7 +182,7 @@ def get_var2(data_dict,initial_value, name,  var_name, t =True):
     for key in data_dict.keys():
         if data_dict is not None and var_name in key:
             value = data_dict[key]
-	    print(var_name,value.shape)
+	    print(name,value.shape)
 	    return tf.get_variable(shape = value.shape,initializer = tf.constant_initializer(value), name=var_name,trainable =t)
     value = initial_value
     var = tf.get_variable(shape = tf.shape(value),initializer = tf.constant_initializer(value), name=var_name,trainable =t)
@@ -202,7 +202,6 @@ def get_conv_var2(data_dict, filter_size, in_channels, out_channels, name):
 def get_conv3d_var(data_dict, filter_size, in_channels, out_channels, name):
         initial_value = tf.truncated_normal([out_channels,in_channels,filter_size, filter_size, filter_size], 0.0, 0.001)
         filters = get_var2(data_dict,initial_value, name,  name + "_filters",False)
-	print(data_dict.keys())
         initial_value = tf.truncated_normal([out_channels], .0, .001)
         biases = get_var2(data_dict,initial_value, name,  name + "_biases",False)
 
