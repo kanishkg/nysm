@@ -9,7 +9,7 @@ from batch_generator import batch_generator
 from model import model
 
 
-mode = 'train'
+mode = 'overfit'
 max_epoch = 300
 batch_size = 16
 output_dir = '/scratch/kvg245/youtube_videos/output/train1/'
