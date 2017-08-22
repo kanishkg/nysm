@@ -10,7 +10,7 @@ from model import model
 
 
 mode = 'overfit'
-max_epoch = 300
+max_epoch = 3000
 batch_size = 16
 output_dir = '/scratch/kvg245/youtube_videos/output/train1/'
 seed = 4
