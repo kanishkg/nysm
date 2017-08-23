@@ -110,7 +110,7 @@ class model(object):
 
 
     def forward(self, input_array,record_array, target_array):
-        out = self.sess.run(self.outputs, {self.input_tensor : input_array,self.input_record:record_array,self.target : target_array})
+        out = self.sess.run(self.outputs, {self.feat_tensor : input_array,self.input_record:record_array,self.target : target_array})
         return out
 
 
