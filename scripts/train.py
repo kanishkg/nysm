@@ -33,7 +33,11 @@ if __name__ == "__main__":
         for i in range(max_epoch):
             loss = Model.train(batch['input'],batch['record'],batch['target'])
             print(i,loss)
-
+            if i%100 == 0:
+                pred =
+                Model.forward(batch['input'],batch['record'],batch['target'])
+                print (batch['target'][0,...])
+                print (pred)
     elif mode == 'train':
 
         bg =batch_generator(batch_size)
