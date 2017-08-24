@@ -37,6 +37,7 @@ if __name__ == "__main__":
                 pred = Model.forward(batch['input'],batch['record'],batch['target']) 
                 print (batch['target'][0,0,:])
                 print (pred[0,0,:])
+                print (batch['record'][0,0,:])
     elif mode == 'train':
 
         bg =batch_generator(batch_size)
