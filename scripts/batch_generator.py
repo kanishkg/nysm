@@ -56,6 +56,7 @@ class batch_generator:
             for seq in range(self.seq_length):
                 target.append(self.target_data[data[0]][data[1],[int(data[2]+seq*self.fps[data[0]] +int(i*self.fps[data[0]]/20.0)) for i in range(20)], 2:])
                 record.append(self.target_data[data[0]][data[1],[int(data[2]+seq*self.fps[data[0]] -int(i*self.fps[data[0]]/20.0)-1) for i in range(20)],2:])
+                print record[-1].shape
                 arr = [int(data[2]+seq*self.fps[data[0]] +int(i*self.fps[data[0]]/20.0)) for i in range(-20,20) if i in ind]
                 if not self.frozen:
                     video.append(self.input_data[str(data[0])][arr,...])
@@ -73,7 +74,7 @@ class batch_generator:
         target[:,:,:20] = target_batch[:,:,:,0]
         record[:,:,:20] = record_batch[:,:,:,0]
         target[:,:,20:] = target_batch[:,:,:,1]
-        record[:,:,:20:] = record_batch[:,:,:,1]
+        record[:,:,20:] = record_batch[:,:,:,1]
 
         record_batch = np.asarray(record_batch).reshape((len(data_list),self.seq_length,20*2))
         target_batch = np.asarray(target_batch).reshape((len(data_list),self.seq_length,20*2))

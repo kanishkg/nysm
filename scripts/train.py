@@ -31,7 +31,7 @@ if __name__ == "__main__":
         Model = model(batch_size,ckpt = ckpt,output_dir = output_dir)
         batch = bg.get_batch_vec()
         for i in range(max_epoch):
-            loss = Model.train(batch['input'],batch['record'],batch['target'])
+            loss = Model.train(batch['input'],batch['target'],batch['target'])
             print(i,loss)
             if i%100 == 0:
                 pred = Model.forward(batch['input'],batch['target'],batch['target'])
