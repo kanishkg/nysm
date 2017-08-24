@@ -31,10 +31,10 @@ if __name__ == "__main__":
         Model = model(batch_size,ckpt = ckpt,output_dir = output_dir)
         batch = bg.get_batch_vec()
         for i in range(max_epoch):
-            loss = Model.train(batch['input'],batch['target'],batch['target'])
+            loss = Model.train(batch['input'],batch['record'],batch['target'])
             print(i,loss)
             if i%100 == 0:
-                pred = Model.forward(batch['input'],batch['target'],batch['target'])
+                pred = Model.forward(batch['input'],batch['record'],batch['target'])
                 print (batch['target'][0,1,:])
                 print (pred[0,1,:])
                 print (batch['record'][0,1,:])
