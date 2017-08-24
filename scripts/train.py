@@ -34,10 +34,10 @@ if __name__ == "__main__":
             loss = Model.train(batch['input'],batch['record'],batch['target'])
             print(i,loss)
             if i%100 == 0:
-                pred = Model.forward(batch['input'],batch['record'],batch['target']) 
-                print (batch['target'][0,0,:])
-                print (pred[0,0,:])
-                print (batch['record'][0,0,:])
+                pred = Model.forward(batch['input'],batch['target'],batch['target'])
+                print (batch['target'][0,1,:])
+                print (pred[0,1,:])
+                print (batch['record'][0,1,:])
     elif mode == 'train':
 
         bg =batch_generator(batch_size)
