@@ -99,7 +99,7 @@ class model(object):
 
 
     def def_loss(self, out, target):
-        loss = tf.reduce_sum(tf.nn.l2_loss(target - out))
+        loss = tf.reduce_mean(tf.square(target - out))
         #loss = tf.reduce_mean(tf.minimum(tf.square(target[:,:,:self.rec_length]*2*pi-2*pi*out[:,:,:self.rec_length]),
         #    tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*out[:,:,:self.rec_length])))
         #loss += 4*tf.reduce_mean(tf.square(target[:,:,:self.rec_length]*pi-pi*out[:,:,:self.rec_length]))
