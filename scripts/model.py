@@ -33,7 +33,7 @@ class model(object):
             self.lstm_input = tf.concat([self.temp_enc,self.input_record],axis = 2)
 
         with tf.variable_scope("LSTM"):
-            self.cell = tf.nn.rnn_cell.LSTMCell(num_units=512, state_is_tuple=True)
+            self.cell = tf.nn.rnn_cell.LSTMCell(num_units=1024, state_is_tuple=True)
             self.outputs, _ = tf.nn.dynamic_rnn(self.cell,self.lstm_input,dtype = tf.float32)
 
         with tf.variable_scope("output"):
