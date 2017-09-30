@@ -25,15 +25,17 @@ class model(object):
                 self.fc_enc = tf.map_fn(function,self.temp_enc)
                 self.temp_enc = tf.transpose(self.fc_enc,[1,0,2])
             else:
-                function = lambda x: tf.contrib.layers.fully_connected(x,4096)
-                self.fc_enc = tf.map_fn(function,tf.transpose(self.feat_tensor,[1,0,2]))
-                self.temp_enc = tf.transpose(self.fc_enc,[1,0,2])
+                pass
+                #function = lambda x: tf.contrib.layers.fully_connected(x,4096)
+                #self.fc_enc = tf.map_fn(function,tf.transpose(self.feat_tensor,[1,0,2]))
+                #self.temp_enc = tf.transpose(self.fc_enc,[1,0,2])
 
         with tf.variable_scope("fully_connected"):
-            self.lstm_input = tf.concat([self.temp_enc,self.input_record],axis = 2)
+            #self.lstm_input = tf.concat([self.temp_enc,self.input_record],axis = 2)
+            self.lstm_input = self.input_record
 
         with tf.variable_scope("LSTM"):
-            self.cell = tf.nn.rnn_cell.LSTMCell(num_units=1024, state_is_tuple=True)
+            self.cell = tf.nn.rnn_cell.LSTMCell(num_units=128, state_is_tuple=True)
             self.outputs, _ = tf.nn.dynamic_rnn(self.cell,self.lstm_input,dtype = tf.float32)
 
         with tf.variable_scope("output"):
@@ -99,7 +101,7 @@ class model(object):
 
 
     def def_loss(self, out, target):
-        loss = tf.reduce_mean(tf.square(target - out))
+        loss = tf.reduce_sum(tf.square(target - out))/(self.batch_size*self.seq_length*self.rec_length*2)
         #loss = tf.reduce_mean(tf.minimum(tf.square(target[:,:,:self.rec_length]*2*pi-2*pi*out[:,:,:self.rec_length]),
         #    tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*out[:,:,:self.rec_length])))
         #loss += 4*tf.reduce_mean(tf.square(target[:,:,:self.rec_length]*pi-pi*out[:,:,:self.rec_length]))
