@@ -11,7 +11,7 @@ from trajectory_model import model
 
 mode = 'train'
 max_epoch = 3000
-batch_size = 16
+batch_size = 128
 output_dir = '/scratch/kvg245/youtube_videos/output/train1/'
 seed = 4
 ckpt = False
@@ -52,7 +52,8 @@ if __name__ == "__main__":
             avg_loss+=loss
             i+=1
             end = time.time()
-            print(bg.batch_index,bg.current_epoch,loss,avg_loss/i,compute-start,end-compute,(end-start)*(bg.batch_len-bg.batch_index)*(max_epoch-bg.current_epoch-1))
+            if bg.batch_index%10000 == 0 :
+                print(bg.batch_index,bg.current_epoch,loss,avg_loss/i,compute-start,end-compute,(end-start)*(bg.batch_len-bg.batch_index)*(max_epoch-bg.current_epoch-1))
 
             if bg.batch_index%save_freq==0:
                 Model.save()
