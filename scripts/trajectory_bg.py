@@ -59,7 +59,7 @@ class batch_generator:
 
         target_batch =np.asarray(target_batch).reshape((len(data_list),self.seq_length,2))
 
-        return { 'target':target, 'record':record }
+        return { 'target':target_batch, 'record':record_batch }
 
     def get_batch_vec(self):
         """Provides batch of data to process and keeps
