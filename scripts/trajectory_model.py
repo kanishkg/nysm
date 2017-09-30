@@ -34,15 +34,14 @@ class model(object):
             #                               output_time_major=False,
             #                               impute_finished=True,
             #                               maximum_iterations=20)
-            o = self.outputs[-1]
-            s = self.states[-1]
+            o = self.states
+            s = o
             self.outputs = []
             for i in range(self.seq_length):
                 x = tf.sigmoid(tf.contrib.layers.fully_connected(o, 2))
                 self.outputs.append(x)
-                o = self.cell(x, s)
-                s = o
-            self.outputs = tf.stack(self.outputs)
+                o,s = self.cell(x, s)
+            self.outputs = tf.transpose(tf.stack(self.outputs),[1,0,2])
         with tf.variable_scope("loss"):
             self.loss = self.def_loss(self.outputs, self.target)
 
@@ -68,9 +67,9 @@ class model(object):
         self.saver.save(self.sess, self.output_dir + "model.ckpt")
 
     def def_loss(self, out, target):
-        loss = tf.reduce_sum(tf.square(target - out)) / \
-            (self.batch_size * self.seq_length * self.rec_length * 2)
-        # loss = tf.reduce_mean(tf.minimum(tf.square(target[:,:,:self.rec_length]*2*pi-2*pi*out[:,:,:self.rec_length]),
+        loss = tf.reduce_sum(tf.square(target - out))/(self.batch_size * self.seq_length * 2)
+
+                    # loss = tf.reduce_mean(tf.minimum(tf.square(target[:,:,:self.rec_length]*2*pi-2*pi*out[:,:,:self.rec_length]),
         #    tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*out[:,:,:self.rec_length])))
         #loss += 4*tf.reduce_mean(tf.square(target[:,:,:self.rec_length]*pi-pi*out[:,:,:self.rec_length]))
         return loss
@@ -90,7 +89,7 @@ class model(object):
 
 
 if __name__ == "__main__":
-    Model = model(8)
-    b = np.zeros((8, 20, 2))
-    c = np.ones((8, 20, 2))
+    Model = model(4)
+    b = np.zeros((4, 20, 2))
+    c = np.ones((4, 20, 2))
     a = Model.train(b, c)
