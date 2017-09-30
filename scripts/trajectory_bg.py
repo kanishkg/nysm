@@ -15,6 +15,7 @@ class batch_generator:
         self.rec_length = rec_length
         random.seed(4)
         self.val_list = list(random.sample(range(0,57),int(57*0.2)))
+        self.index_data,self.target_data = self.open_files(target_file,index_file)
         self.batch_len = len(self.index_data)
         self.current_epoch = None
         self.batch_index = None
@@ -22,9 +23,8 @@ class batch_generator:
         self.video = None
         self.fps  = [30,30,29.97,25,60,30]
 
-    def open_files(self,target_file,input_file,index_file):
+    def open_files(self,target_file,index_file):
 
-        input = h5py.File(input_file,'r')
         target =  np.load(target_file)
 
         index_data = np.load(index_file)
@@ -35,7 +35,7 @@ class batch_generator:
 
         print len(index_data)
 
-        return index_data,target, input
+        return index_data,target
 
     def create_batch(self, data_list):
         """Creates and returns a batch of input and output data"""
