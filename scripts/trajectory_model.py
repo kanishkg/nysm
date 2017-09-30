@@ -19,7 +19,7 @@ class model(object):
         with tf.variable_scope("encoder"):
             self.cell = tf.nn.rnn_cell.BasicRNNCell(num_units=8)
             self.outputs, self.states = tf.nn.dynamic_rnn(
-                self.cell, self.lstm_input, dtype=tf.float32)
+                self.cell, self.input_record, dtype=tf.float32)
 
         with tf.variable_scope("decoder"):
             #            self.cell = tf.nn.rnn_cell.LSTMCell(num_units = 16,
