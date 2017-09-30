@@ -89,5 +89,3 @@ if __name__ == "__main__":
 
         a = bg.get_batch_vec()
 
-        print bg.batch_index
-
