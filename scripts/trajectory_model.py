@@ -17,7 +17,7 @@ class model(object):
                                             seq_length, 2), dtype=tf.float32)
 
         with tf.variable_scope("encoder"):
-            self.cell = tf.nn.rnn_cell.BasicRNNCell(num_units=8)
+            self.cell = tf.nn.rnn_cell.BasicRNNCell(num_units=1)
             self.outputs, self.states = tf.nn.dynamic_rnn(
                 self.cell, self.input_record, dtype=tf.float32)
 
@@ -38,7 +38,8 @@ class model(object):
             s = o
             self.outputs = []
             for i in range(self.seq_length):
-                x = tf.sigmoid(tf.contrib.layers.fully_connected(o, 2))
+                x = tf.sigmoid(tf.contrib.layers.fully_connected(
+                    o, 2,activation_fn=None))
                 self.outputs.append(x)
                 o,s = self.cell(x, s)
             self.outputs = tf.transpose(tf.stack(self.outputs),[1,0,2])
