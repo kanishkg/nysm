@@ -92,4 +92,4 @@ if __name__ == "__main__":
     Model = model(8)
     b = np.zeros((8,20,2))
     c= np.ones((8,20,2))
-    a = Model.train(a,b,c)
+    a = Model.train(b,c)
