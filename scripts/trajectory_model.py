@@ -22,27 +22,23 @@ class model(object):
                 self.cell, self.input_record, dtype=tf.float32)
 
         with tf.variable_scope("decoder"):
-            #            self.cell = tf.nn.rnn_cell.LSTMCell(num_units = 16,
-            #                                                state_is_tuple = True)
-            #            helper =
-            #            tf.contrib.seq2seq.TrainingHelper(input=input_record,sequence_length=seq_length)
-            #            decoder = tf.contrib.seq2seq.Decoder(self.cell,helper,
-            #                    initial_state =self.cell.zero_state(batch_size,dtype=
-            #                                                        tf.float32)
-            #            self.outputs, _ = tf.contrib.seq2seq.dynamic_decode(
-            #                               decoder=decoder,
-            #                               output_time_major=False,
-            #                               impute_finished=True,
-            #                               maximum_iterations=20)
-            o = self.states
-            s = o
-            self.outputs = []
-            for i in range(self.seq_length):
-                x = tf.sigmoid(tf.contrib.layers.fully_connected(
-                    o, 2,activation_fn=None))
-                self.outputs.append(x)
-                o,s = self.cell(x, s)
-            self.outputs = tf.transpose(tf.stack(self.outputs),[1,0,2])
+            self.out, _ = tf.nn.dynamic_rnn(self.cell, self.target,
+                                            initial_state = self.states)
+#            o = self.states
+#            s = o
+#            self.outputs = []
+#            for i in range(self.seq_length):
+#                x = tf.sigmoid(tf.contrib.layers.fully_connected(
+#                    o, 2,activation_fn=None))
+#                self.outputs.append(x)
+#                o,s = self.cell(x, s)
+#            self.outputs = tf.transpose(tf.stack(self.outputs),[1,0,2])
+            function = lambda x:tf.contrib.layers.fully_connected(
+                                x,2,activation_fn=None)
+            self.outputs = tf.map_fn(function,tf.unstack(self.out,axis=1))
+
+            self.outputs = tf.stack(self.outputs,axis = 1)
+
         with tf.variable_scope("loss"):
             self.loss = self.def_loss(self.outputs, self.target)
 
