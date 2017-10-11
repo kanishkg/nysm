@@ -14,7 +14,7 @@ max_epoch = 3000
 batch_size = 16
 output_dir = '/scratch/kvg245/youtube_videos/output/train1/'
 seed = 4
-ckpt = False
+ckpt = True
 
 save_freq = 4000
 
