@@ -58,7 +58,7 @@ class model(object):
             print("loading model from checkpoint")
             print(output_dir)
             checkpoint = tf.train.latest_checkpoint(output_dir)
-            self.restore_saver.restore(sess,checkpoint)
+            self.restore_saver.restore(self.sess,checkpoint)
         else:
             self.initialize()
 
