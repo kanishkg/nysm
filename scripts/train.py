@@ -17,6 +17,8 @@ seed = 4
 ckpt = True
 
 save_freq = 4000
+val_freq = 50000
+stat_freq = 100
 
 if __name__ == "__main__":
 
@@ -36,7 +38,7 @@ if __name__ == "__main__":
             if i%100 == 0:
                 pred = Model.forward(batch['input'],batch['record'],batch['target'])
                 print (batch['target'][0,1,:])
-                print (pred[0,1,:])
+                print (pred[0][0,1,:])
                 print (batch['record'][0,1,:])
     elif mode == 'train':
 
@@ -47,6 +49,16 @@ if __name__ == "__main__":
         avg_loss = 0
         i = 0
 
+        def val():
+            bg_val = batch_generator(batch_size,istrain = False)
+            batch = bg_val.get_batch_vec()
+            loss = [0,0,0,0,0]
+            while bg_val.current_epoch!=1:
+                loss_current = Model.forward(batch['input'],batch['record'],
+                                     batch['target'])
+                loss = [x + y for x, y in zip(loss_current[1:],loss)]
+            print ("Val Loss",loss)
+            return loss[0]
         while bg.current_epoch<max_epoch:
             start = time.time()
             batch = bg.get_batch_vec()
@@ -55,7 +67,9 @@ if __name__ == "__main__":
             avg_loss+=loss
             i+=1
             end = time.time()
-            print(bg.batch_index,bg.current_epoch,loss,avg_loss/i,compute-start,end-compute,(end-start)*(bg.batch_len-bg.batch_index)*(max_epoch-bg.current_epoch-1))
+            val_loss = 0
+            if bg.batch_index%stat_freq ==0:
+                print(bg.batch_index,bg.current_epoch,loss,avg_loss/i)
 
             if bg.batch_index%save_freq==0:
                 Model.save()
@@ -63,4 +77,6 @@ if __name__ == "__main__":
             if bg.batch_index%1000 ==0:
                 i = 0
                 avg_loss = 0
+            if bg.batch_index %val_freq ==0:
+                val_loss = val()
 
