@@ -32,13 +32,16 @@ for w, worker in enumerate(worker_list):
         data = pd.read_csv(data_dir+worker+'/'+video)
         wxp_data = []
         print w,i
-        for r, row in data.iterrows():
+        frames_done =[]
+        for row,r in enumerate(data.rows):
             if r>5:
                 theta,phi = get_angles(row)
                 time = row['PlaybackTime']
                 frame_num = int(float(time)*
                         float(video_meta.iloc[[i]]['FrameRate']))
-                wxp_data.append([frame_num,time,theta,phi])
+                if frame_num not in frames_done:
+                    wxp_data.append([frame_num,time,theta,phi])
+                frames_done.append(frame_num)
         data_arr[w].append(wxp_data)
 data_array = np.array(data_arr)
 np.save(data_dir+'data1.npy',data_array)
