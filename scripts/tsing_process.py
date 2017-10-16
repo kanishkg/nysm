@@ -33,7 +33,7 @@ for w, worker in enumerate(worker_list):
         wxp_data = []
         print w,i
         frames_done =[]
-        for row,r in enumerate(data.rows):
+        for r,row in data.iterrows():
             if r>5:
                 theta,phi = get_angles(row)
                 time = row['PlaybackTime']
