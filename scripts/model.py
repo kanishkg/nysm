@@ -16,7 +16,7 @@ class model(object):
         self.feat_tensor = tf.placeholder(shape = (batch_size,seq_length,61440),dtype=tf.float32)
         self.input_record = tf.placeholder(shape=(batch_size,seq_length,rec_length*2),dtype = tf.float32)
         self.target = tf.placeholder(shape = (batch_size, seq_length,rec_length*2),dtype = tf.float32)
-
+        # self.target = tf.placeholder(shape = (batch_size, seq_length,4),dtype = tf.float32)
         with tf.variable_scope("temp_enc"):
             if not frozen:
                 function = lambda x: tf.contrib.layers.flatten(self.temporal_encoder(x)[-1])
@@ -39,7 +39,10 @@ class model(object):
             self.outputs, _ = tf.nn.dynamic_rnn(self.cell,self.lstm_input,dtype = tf.float32)
 
         with tf.variable_scope("output"):
-            self.outputs = tf.sigmoid(tf.contrib.layers.fully_connected(self.outputs,rec_length*2,activation_fn = None))
+            # self.outputs = tf.sigmoid(tf.contrib.layers.fully_connected(self.outputs,rec_length*2,activation_fn = None))
+            self.outputs = tf.sigmoid(tf.contrib.layers.fully_connected(self.outputs,
+                                                                        4,activation_fn = None))
+
 
         with tf.variable_scope("loss"):
             self.loss = self.def_loss(self.outputs, self.target)
@@ -102,18 +105,34 @@ class model(object):
 
     def def_loss(self, out, target):
         #loss = tf.reduce_sum(tf.square(target - out))/(self.batch_size*self.seq_length*self.rec_length*2)
-        loss = tf.reduce_mean(tf.minimum(tf.square(target[:,:,:self.rec_length]*2*pi-2*pi*out[:,:,:self.rec_length]),
-            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*out[:,:,:self.rec_length])))
-        loss +=tf.reduce_mean(
-            tf.square(target[:,:,self.rec_length:]*pi-pi*out[:,:,self.rec_length:]))
-        return loss
+        # loss = tf.reduce_mean(tf.minimum(tf.square(target[:,:,:self.rec_length]*2*pi-2*pi*out[:,:,:self.rec_length]),
+        #     tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*out[:,:,:self.rec_length])))
+        # loss +=tf.reduce_mean(
+        #     tf.square(target[:,:,self.rec_length:]*pi-pi*out[:,:,self.rec_length:]))
+        sigmas = tf.exp(out[:,:,2:])
+        means = out[:,:,:2]
+        self.theta_log_likelihood =tf.div(tf.minimum(tf.square(
+            target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(means[:,:,0],self.rec_length)),
+            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(means[:,:,0],self.rec_length))),tf.tile(sigmas[:,:,0],self.rec_length))
+        self.phi_log_likelihood =tf.div(tf.square(
+            target[:,:,:self.rec_length]**pi-*pi*tf.tile(means[:,:,1],self.rec_length)),tf.tile(sigmas[:,:,1],self.rec_length))
+        self.MSE_theta = tf.minimum(tf.square(
+            target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(means[:,:,0],self.rec_length)),
+            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(means[:,:,0],self.rec_length)))
+        self.MSE_phi = tf.square(
+            target[:,:,:self.rec_length]**pi-*pi*tf.tile(means[:,:,1],self.rec_length)),tf.tile(sigmas[:,:,1],self.rec_length))
+        NLL = self.theta_log_likelihood+self.phi_log_likelihood
+        return NLL
 
     def initialize(self):
         self.sess.run(tf.global_variables_initializer())
 
 
     def forward(self, input_array,record_array, target_array):
-        out = self.sess.run(self.outputs, {self.feat_tensor : input_array,self.input_record:record_array,self.target : target_array})
+        out = self.sess.run([self.outputs,self.loss,self.theta_log_likelihood,
+                             self.phi_log_likelihood, self.MSE_theta,
+                             self.MSE_phi],
+                            {self.feat_tensor : input_array,self.input_record:record_array,self.target : target_array})
         return out
 
 
