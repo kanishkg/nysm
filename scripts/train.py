@@ -5,7 +5,7 @@ import time
 import tensorflow as tf
 import numpy as np
 
-from batch_generator import batch_generator
+from tsing_bg.py import batch_generator
 from model import model
 
 
@@ -14,7 +14,7 @@ max_epoch = 3000
 batch_size = 16
 output_dir = '/scratch/kvg245/youtube_videos/output/train1/'
 seed = 4
-ckpt = True
+ckpt = False
 
 save_freq = 4000
 val_freq = 50000
