@@ -21,16 +21,14 @@ class model(object):
             self.outputs, _ = tf.nn.dynamic_rnn(self.cell,self.lstm_input,dtype = tf.float32)
 
         with tf.variable_scope("output"):
-            self.outputs = tf.sigmoid(tf.contrib.layers.fully_connected(self.outputs,
-                                                                        4,activation_fn = None))
-
+            self.outputs = tf.sigmoid(tf.contrib.layers.fully_connected(self.outputs,4,activation_fn = None))
 
         with tf.variable_scope("loss"):
             self.loss = self.def_loss(self.outputs, self.target)
 
 
-        self.sess = tf.Session()
 
+        self.sess = tf.Session()
         self.optimizer = tf.train.AdamOptimizer(0.001)
         self.variables = [var for var in tf.trainable_variables()]
         self.grads = self.optimizer.compute_gradients(self.loss, var_list = self.variables)
@@ -38,23 +36,24 @@ class model(object):
         self.saver = tf.train.Saver()
         self.restore_saver = tf.train.Saver()
 
+
         if ckpt:
             print("loading model from checkpoint")
             print(output_dir)
             checkpoint = tf.train.latest_checkpoint(output_dir)
             self.restore_saver.restore(self.sess,checkpoint)
         else:
-            self.initialize
+            self.initialize()
 
-        # with tf.name_scope('summaries'):
-        #     tf.summary.scalar('total_loss',self.loss)
-        #     tf.summary.scalar('MSE_theta', self.MSE_theta)
-        #     tf.summary.scalar('MSE_phi', self.MSE_theta)
-        #     tf.summary.scalar('phi_log_likelihood', self.phi_log_likelihood)
-        #     tf.summary.scalar('theta_log_likelihood', self.theta_log_likelihood)
-        # self.merged_summaries = tf.summary.merge_all()
-        # self.train_writer = tf.summary.FileWriter(output_dir ,
-        #                               self.sess.graph)
+        with tf.name_scope('summaries'):
+            tf.summary.scalar('total_loss',self.loss)
+            tf.summary.scalar('MSE_theta', self.MSE_theta)
+            tf.summary.scalar('MSE_phi', self.MSE_theta)
+            tf.summary.scalar('phi_log_likelihood', self.phi_log_likelihood)
+            tf.summary.scalar('theta_log_likelihood', self.theta_log_likelihood)
+        self.merged_summaries = tf.summary.merge_all()
+        self.train_writer = tf.summary.FileWriter(output_dir ,
+                                      self.sess.graph)
 
 
 
@@ -123,6 +122,7 @@ class model(object):
         return NLL
 
     def initialize(self):
+        print("initialize")
         self.sess.run(tf.global_variables_initializer())
 
 
@@ -130,7 +130,7 @@ class model(object):
         out = self.sess.run([self.outputs,self.loss,self.theta_log_likelihood,
                              self.phi_log_likelihood, self.MSE_theta,
                              self.MSE_phi],
-                            {self.feat_tensor : input_array,self.input_record:record_array,self.target : target_array})
+                            {self.input_record:record_array,self.target : target_array})
         return out
 
     def train(self,  record_array,target_array):
@@ -140,6 +140,7 @@ class model(object):
 
 if __name__ == "__main__":
     Model = model(8)
-    b = np.zeros((8,20,40))
+    b = np.ones((8,20,40))
     c= np.ones((8,20,40))
-    a = Model.train(b,c)
+    _ = Model.train(b,c)
+
