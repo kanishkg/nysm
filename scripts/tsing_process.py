@@ -4,7 +4,7 @@ import pandas as pd
 
 
 
-data_dir = '/scratch/kvg245/tsing_data/Formated_Data/Experiment_2/'
+data_dir = '/scratch/kvg245/tsing_data/Formated_Data/Experiment_1/'
 
 
 def get_angles(row):

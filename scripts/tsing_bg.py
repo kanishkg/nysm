@@ -5,6 +5,7 @@ import random
 import h5py
 import time
 import math
+import pandas as pd
 
 class batch_generator:
 
@@ -18,10 +19,7 @@ class batch_generator:
         self.calc_vid = calc_vid
         random.seed(4)
         self.val_list = list(random.sample(range(0,18),int(18*0.2)))
-        if not frozen:
-            self.index_data,self.target_data = self.open_files(target_file,index_file)
-        else:
-            self.index_data,self.target_data = self.open_files(target_file,index_file)
+        self.index_data,self.target_data = self.open_files(target_file,index_file)
         self.batch_len = len(self.index_data)
         self.current_epoch = None
         self.batch_index = None
@@ -42,7 +40,7 @@ class batch_generator:
             index_data = shuffled([a for a in index_data if a[1] not in self.val_list and a[1]!=0])
         else:
             index_data = [a for a in index_data if a[1] in self.val_list and a[1]!=0]
-        if self.calc_vid not None:
+        if self.calc_vid:
             index_data = [a for a in index_data if a[1]==self.calc_vid]
 
 
@@ -56,22 +54,19 @@ class batch_generator:
         input_batch = []
         record_batch = []
         target_batch = []
-        ind = sorted([-3,-5,-8,-10,-12,-15,-17,-20,0,3,6,9,12,15,17,19])
         for data in data_list:
             target = []
             record = []
             video = []
             for seq in range(self.seq_length):
-                target.append(self.target_data[data[0]][data[1],[int(data[2]+seq*self.fps[data[0]] +int(i*self.fps[data[0]]/20.0)) for i in range(20)], 2:])
-                record.append(self.target_data[data[0]][data[1],[int(data[2]+seq*self.fps[data[0]] -int(i*self.fps[data[0]]/20.0)-1) for i in range(20)],2:])
-                arr = [int(data[2]+seq*self.fps[data[0]] +int(i*self.fps[data[0]]/20.0)) for i in range(-20,20) if i in ind]
+                target.append(np.array([self.target_data[data[0],data[1]][int(data[2] +int(i*self.fps[data[1]]/20.0))][2:] for i in range(20)]))
+                record.append(np.array([self.target_data[data[0],data[1]][int(data[2]-seq*self.fps[data[1]] -int(i*self.fps[data[1]]/20.0)-1)][2:] for i in range(20)]))
             target_batch.append(target[-1])
             record_batch.append(record)
 
         target_batch = np.asarray(target_batch)
         record_batch = np.asarray(record_batch)
         target = np.zeros((self.batch_size,20*2))
-        # target = target_batch
         record = np.zeros((self.batch_size,self.seq_length,20*2))
         target[:,:20] = target_batch[:,:,0]
         record[:,:,:20] = record_batch[:,:,:,0]
@@ -101,7 +96,7 @@ class batch_generator:
 
 
 if __name__ == "__main__":
-    bg = batch_generator(4,frozen = True)
+    bg = batch_generator(4)
     a = bg.get_batch_vec()
     while bg.current_epoch ==0:
 
