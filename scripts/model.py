@@ -5,33 +5,15 @@ from math import pi
 
 class model(object):
 
-    def __init__(self, batch_size = 1, seq_length=20,rec_length=20,ckpt = False,output_dir = '',frozen = True):
+    def __init__(self, batch_size = 1, seq_length=20,rec_length=20,ckpt = False,output_dir = ''):
         self.seq_length = seq_length
         self.rec_length = rec_length
         self.batch_size = batch_size
         self.output_dir = output_dir
-        self.frozen = frozen
-
-        self.input_tensor = tf.placeholder(shape = (batch_size, seq_length,16,256,480,3),dtype = tf.float32)
-        self.feat_tensor = tf.placeholder(shape = (batch_size,seq_length,61440),dtype=tf.float32)
         self.input_record = tf.placeholder(shape=(batch_size,seq_length,rec_length*2),dtype = tf.float32)
         self.target = tf.placeholder(shape = (batch_size, seq_length,rec_length*2),dtype = tf.float32)
-        # self.target = tf.placeholder(shape = (batch_size, seq_length,4),dtype = tf.float32)
-        with tf.variable_scope("temp_enc"):
-            if not frozen:
-                function = lambda x: tf.contrib.layers.flatten(self.temporal_encoder(x)[-1])
-                self.temp_enc = tf.map_fn(function,tf.transpose(self.input_tensor,[1,0,2,3,4,5]),parallel_iterations = 1,swap_memory =True,back_prop = False)
-                function = lambda x: tf.contrib.layers.fully_connected(x,4096)
-                self.fc_enc = tf.map_fn(function,self.temp_enc)
-                self.temp_enc = tf.transpose(self.fc_enc,[1,0,2])
-            else:
-                pass
-                #function = lambda x: tf.contrib.layers.fully_connected(x,4096)
-                #self.fc_enc = tf.map_fn(function,tf.transpose(self.feat_tensor,[1,0,2]))
-                #self.temp_enc = tf.transpose(self.fc_enc,[1,0,2])
 
         with tf.variable_scope("fully_connected"):
-            #self.lstm_input = tf.concat([self.temp_enc,self.input_record],axis = 2)
             self.lstm_input = self.input_record
 
         with tf.variable_scope("LSTM"):
@@ -39,7 +21,6 @@ class model(object):
             self.outputs, _ = tf.nn.dynamic_rnn(self.cell,self.lstm_input,dtype = tf.float32)
 
         with tf.variable_scope("output"):
-            # self.outputs = tf.sigmoid(tf.contrib.layers.fully_connected(self.outputs,rec_length*2,activation_fn = None))
             self.outputs = tf.sigmoid(tf.contrib.layers.fully_connected(self.outputs,
                                                                         4,activation_fn = None))
 
@@ -63,7 +44,14 @@ class model(object):
             checkpoint = tf.train.latest_checkpoint(output_dir)
             self.restore_saver.restore(self.sess,checkpoint)
         else:
-            self.initialize()
+            self.initialize
+
+
+
+
+
+
+
 
     def save(self):
 	    self.saver.save(self.sess, self.output_dir+"model.ckpt")
@@ -115,39 +103,44 @@ class model(object):
             target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(means[:,:,0],self.rec_length)),
             tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(means[:,:,0],self.rec_length))),tf.tile(sigmas[:,:,0],self.rec_length))
         self.phi_log_likelihood =tf.div(tf.square(
-            target[:,:,:self.rec_length]**pi-*pi*tf.tile(means[:,:,1],self.rec_length)),tf.tile(sigmas[:,:,1],self.rec_length))
-        self.MSE_theta = tf.minimum(tf.square(
+            target[:,:,:self.rec_length]*pi-pi*tf.tile(means[:,:,1],self.rec_length)),tf.tile(sigmas[:,:,1],self.rec_length))
+        self.MSE_theta = tf.reduce_mean(tf.minimum(tf.square(
             target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(means[:,:,0],self.rec_length)),
-            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(means[:,:,0],self.rec_length)))
-        self.MSE_phi = tf.square(
-            target[:,:,:self.rec_length]**pi-*pi*tf.tile(means[:,:,1],self.rec_length)),tf.tile(sigmas[:,:,1],self.rec_length))
+            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(means[:,:,0],self.rec_length))))
+        self.MSE_phi = tf.reduce_mean(tf.square(
+            target[:,:,self.rec_length:]*pi-pi*tf.tile(means[:,:,1],self.rec_length)))
         NLL = self.theta_log_likelihood+self.phi_log_likelihood
         return NLL
 
     def initialize(self):
+        with tf.name_scope('summaries'):
+            tf.summary.scalar('total_loss',self.loss)
+            tf.summary.scalar('MSE_theta', self.MSE_theta)
+            tf.summary.scalar('MSE_phi', self.MSE_theta)
+            tf.summary.scalar('phi_log_likelihood', self.phi_log_likelihood)
+            tf.summary.scalar('theta_log_likelihood', self.theta_log_likelihood)
+        self.merged_summaries = tf.summary.merge_all()
+        self.train_writer = tf.summary.FileWriter(output_dir ,
+                                      self.sess.graph)
+
         self.sess.run(tf.global_variables_initializer())
 
 
-    def forward(self, input_array,record_array, target_array):
+    def forward(self, record_array, target_array):
         out = self.sess.run([self.outputs,self.loss,self.theta_log_likelihood,
                              self.phi_log_likelihood, self.MSE_theta,
                              self.MSE_phi],
                             {self.feat_tensor : input_array,self.input_record:record_array,self.target : target_array})
         return out
 
-
-    def train(self, input_array, record_array,target_array):
-        if not self.frozen:
-            loss, _ = self.sess.run([self.loss, self.apply_train], {self.input_tensor: input_array,
-                self.target: target_array, self.input_record: record_array})
+    def train(self,  record_array,target_array):
         else:
-            loss, _ = self.sess.run([self.loss, self.apply_train], {self.feat_tensor: input_array,self.target: target_array, self.input_record: record_array})
-        return loss
+            loss,summaries, _ = self.sess.run([self.loss, self.merged_summaries, self.apply_train], {self.target: target_array, self.input_record: record_array})
+        return loss,summaries
 
 
 if __name__ == "__main__":
     Model = model(8)
-    a = np.zeros((8,20,61440))
     b = np.zeros((8,20,40))
     c= np.ones((8,20,40))
     a = Model.train(a,b,c)

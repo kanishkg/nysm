@@ -33,10 +33,10 @@ if __name__ == "__main__":
         Model = model(batch_size,ckpt = ckpt,output_dir = output_dir)
         batch = bg.get_batch_vec()
         for i in range(max_epoch):
-            loss = Model.train(batch['input'],batch['record'],batch['target'])
+            loss = Model.train(batch['record'],batch['target'])
             print(i,loss)
             if i%100 == 0:
-                pred = Model.forward(batch['input'],batch['record'],batch['target'])
+                pred = Model.forward(batch['record'],batch['target'])
                 print (batch['target'][0,1,:])
                 print (pred[0][0,1,:])
                 print (batch['record'][0,1,:])
@@ -54,7 +54,7 @@ if __name__ == "__main__":
             batch = bg_val.get_batch_vec()
             loss = [0,0,0,0,0]
             while bg_val.current_epoch!=1:
-                loss_current = Model.forward(batch['input'],batch['record'],
+                loss_current = Model.forward(batch['record'],
                                      batch['target'])
                 loss = [x + y for x, y in zip(loss_current[1:],loss)]
             print ("Val Loss",loss)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             start = time.time()
             batch = bg.get_batch_vec()
             compute = time.time()
-            loss = Model.train(batch['input'],batch['record'],batch['target'])
+            loss,summary = Model.train(batch['record'],batch['target'])
             avg_loss+=loss
             i+=1
             end = time.time()
@@ -79,4 +79,4 @@ if __name__ == "__main__":
                 avg_loss = 0
             if bg.batch_index %val_freq ==0:
                 val_loss = val()
-
+            Model.train_writer.add_summary(summary,bg.batch_index)
