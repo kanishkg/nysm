@@ -16,8 +16,8 @@ output_dir = '/scratch/kvg245/youtube_videos/output/train1/'
 seed = 4
 ckpt = False
 
-save_freq = 4000
-val_freq = 50000
+save_freq = 5000
+val_freq = 5000
 stat_freq = 100
 
 if __name__ == "__main__":
