@@ -108,11 +108,11 @@ class model(object):
         #     tf.square(target[:,:,self.rec_length:]*pi-pi*out[:,:,self.rec_length:]))
         sigmas = tf.exp(out[:,:,2:])
         means = out[:,:,:2]
-        self.theta_log_likelihood =tf.div(tf.minimum(tf.square(
+        self.theta_log_likelihood =tf.reduce_mean(tf.div(tf.minimum(tf.square(
             target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length])),
-            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length]))),tf.tile(tf.expand_dims(sigmas[:,:,0],-1),[1,1,self.rec_length]))
-        self.phi_log_likelihood =tf.div(tf.square(
-            target[:,:,:self.rec_length]*pi-pi*tf.tile(tf.expand_dims(means[:,:,1],-1),[1,1,self.rec_length])),tf.tile(tf.expand_dims(sigmas[:,:,1],-1),[1,1,self.rec_length]))
+            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length]))),tf.tile(tf.expand_dims(sigmas[:,:,0],-1),[1,1,self.rec_length])))
+        self.phi_log_likelihood =tf.reduce_mean(tf.div(tf.square(
+            target[:,:,:self.rec_length]*pi-pi*tf.tile(tf.expand_dims(means[:,:,1],-1),[1,1,self.rec_length])),tf.tile(tf.expand_dims(sigmas[:,:,1],-1),[1,1,self.rec_length])))
         self.MSE_theta = tf.reduce_mean(tf.minimum(tf.square(
             target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length])),
             tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length]))))
@@ -134,8 +134,8 @@ class model(object):
         return out
 
     def train(self,  record_array,target_array):
-        loss, _ = self.sess.run([self.loss, self.apply_train], {self.target: target_array, self.input_record: record_array})
-        return loss
+        loss,summary, _ = self.sess.run([self.loss,self.merged_summaries, self.apply_train], {self.target: target_array, self.input_record: record_array})
+        return loss, summary
 
 
 if __name__ == "__main__":
