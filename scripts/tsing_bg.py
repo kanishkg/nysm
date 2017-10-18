@@ -65,21 +65,19 @@ class batch_generator:
                 target.append(self.target_data[data[0]][data[1],[int(data[2]+seq*self.fps[data[0]] +int(i*self.fps[data[0]]/20.0)) for i in range(20)], 2:])
                 record.append(self.target_data[data[0]][data[1],[int(data[2]+seq*self.fps[data[0]] -int(i*self.fps[data[0]]/20.0)-1) for i in range(20)],2:])
                 arr = [int(data[2]+seq*self.fps[data[0]] +int(i*self.fps[data[0]]/20.0)) for i in range(-20,20) if i in ind]
-            target_batch.append(target)
+            target_batch.append(target[-1])
             record_batch.append(record)
 
         target_batch = np.asarray(target_batch)
         record_batch = np.asarray(record_batch)
-        target = np.zeros((self.batch_size,self.seq_length,20*2))
+        target = np.zeros((self.batch_size,20*2))
         # target = target_batch
         record = np.zeros((self.batch_size,self.seq_length,20*2))
-        target[:,:,:20] = target_batch[:,:,:,0]
+        target[:,:20] = target_batch[:,:,0]
         record[:,:,:20] = record_batch[:,:,:,0]
-        target[:,:,20:] = target_batch[:,:,:,1]
+        target[:,20:] = target_batch[:,:,1]
         record[:,:,20:] = record_batch[:,:,:,1]
 
-        record_batch = np.asarray(record_batch).reshape((len(data_list),self.seq_length,20*2))
-        target_batch = np.asarray(target_batch).reshape((len(data_list),self.seq_length,20*2))
         return { 'target':target, 'record':record }
 
     def get_batch_vec(self):

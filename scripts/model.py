@@ -11,7 +11,7 @@ class model(object):
         self.batch_size = batch_size
         self.output_dir = output_dir
         self.input_record = tf.placeholder(shape=(batch_size,seq_length,rec_length*2),dtype = tf.float32)
-        self.target = tf.placeholder(shape = (batch_size, seq_length,rec_length*2),dtype = tf.float32)
+        self.target = tf.placeholder(shape = (batch_size,rec_length*2),dtype = tf.float32)
 
         with tf.variable_scope("fully_connected"):
             self.lstm_input = self.input_record
@@ -21,12 +21,11 @@ class model(object):
             self.outputs, _ = tf.nn.dynamic_rnn(self.cell,self.lstm_input,dtype = tf.float32)
 
         with tf.variable_scope("output"):
-            self.outputs = tf.sigmoid(tf.contrib.layers.fully_connected(self.outputs,4,activation_fn = None))
+            self.outputs = tf.sigmoid(tf.contrib.layers.fully_connected(
+                self.outputs[:,-1,:],4,activation_fn = None))
 
         with tf.variable_scope("loss"):
             self.loss = self.def_loss(self.outputs, self.target)
-
-
 
         self.sess = tf.Session()
         self.optimizer = tf.train.AdamOptimizer(0.001)
@@ -35,7 +34,6 @@ class model(object):
         self.apply_train = self.optimizer.apply_gradients(self.grads)
         self.saver = tf.train.Saver()
         self.restore_saver = tf.train.Saver()
-
 
         if ckpt:
             print("loading model from checkpoint")
@@ -54,12 +52,6 @@ class model(object):
         self.merged_summaries = tf.summary.merge_all()
         self.train_writer = tf.summary.FileWriter(output_dir ,
                                       self.sess.graph)
-
-
-
-
-
-
 
 
     def save(self):
@@ -99,25 +91,24 @@ class model(object):
         layers = [pool1,pool2,pool3,pool4,pool5]
     	return layers
 
-
     def def_loss(self, out, target):
         #loss = tf.reduce_sum(tf.square(target - out))/(self.batch_size*self.seq_length*self.rec_length*2)
         # loss = tf.reduce_mean(tf.minimum(tf.square(target[:,:,:self.rec_length]*2*pi-2*pi*out[:,:,:self.rec_length]),
         #     tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*out[:,:,:self.rec_length])))
         # loss +=tf.reduce_mean(
         #     tf.square(target[:,:,self.rec_length:]*pi-pi*out[:,:,self.rec_length:]))
-        sigmas = tf.exp(out[:,:,2:])
-        means = out[:,:,:2]
+        sigmas = tf.exp(out[:,2:])
+        means = out[:,:2]
         self.theta_log_likelihood =tf.reduce_mean(tf.div(tf.minimum(tf.square(
-            target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length])),
-            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length]))),tf.tile(tf.expand_dims(sigmas[:,:,0],-1),[1,1,self.rec_length])))
+            target[:,:self.rec_length]*2*pi-2*pi*tf.tile(tf.expand_dims(means[:,0],-1),[1,self.rec_length])),
+            tf.square(2*pi-2*pi*target[:,:self.rec_length]-2*pi*tf.tile(tf.expand_dims(means[:,0],-1),[1,self.rec_length]))),tf.tile(tf.expand_dims(sigmas[:,0],-1),[1,self.rec_length])))
         self.phi_log_likelihood =tf.reduce_mean(tf.div(tf.square(
-            target[:,:,:self.rec_length]*pi-pi*tf.tile(tf.expand_dims(means[:,:,1],-1),[1,1,self.rec_length])),tf.tile(tf.expand_dims(sigmas[:,:,1],-1),[1,1,self.rec_length])))
+            target[:,:self.rec_length]*pi-pi*tf.tile(tf.expand_dims(means[:,1],-1),[1,self.rec_length])),tf.tile(tf.expand_dims(sigmas[:,1],-1),[1,self.rec_length])))
         self.MSE_theta = tf.reduce_mean(tf.minimum(tf.square(
-            target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length])),
-            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length]))))
+            target[:,:self.rec_length]*2*pi-2*pi*tf.tile(tf.expand_dims(means[:,0],-1),[1,self.rec_length])),
+            tf.square(2*pi-2*pi*target[:,:self.rec_length]-2*pi*tf.tile(tf.expand_dims(means[:,0],-1),[1,self.rec_length]))))
         self.MSE_phi = tf.reduce_mean(tf.square(
-            target[:,:,self.rec_length:]*pi-pi*tf.tile(tf.expand_dims(means[:,:,1],-1),[1,1,self.rec_length])))
+            target[:,self.rec_length:]*pi-pi*tf.tile(tf.expand_dims(means[:,1],-1),[1,self.rec_length])))
         NLL = self.theta_log_likelihood+self.phi_log_likelihood
         return NLL
 
@@ -141,6 +132,6 @@ class model(object):
 if __name__ == "__main__":
     Model = model(8)
     b = np.ones((8,20,40))
-    c= np.ones((8,20,40))
+    c= np.ones((8,40))
     _ = Model.train(b,c)
 
