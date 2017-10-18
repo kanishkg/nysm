@@ -46,6 +46,16 @@ class model(object):
         else:
             self.initialize
 
+        # with tf.name_scope('summaries'):
+        #     tf.summary.scalar('total_loss',self.loss)
+        #     tf.summary.scalar('MSE_theta', self.MSE_theta)
+        #     tf.summary.scalar('MSE_phi', self.MSE_theta)
+        #     tf.summary.scalar('phi_log_likelihood', self.phi_log_likelihood)
+        #     tf.summary.scalar('theta_log_likelihood', self.theta_log_likelihood)
+        # self.merged_summaries = tf.summary.merge_all()
+        # self.train_writer = tf.summary.FileWriter(output_dir ,
+        #                               self.sess.graph)
+
 
 
 
@@ -100,29 +110,19 @@ class model(object):
         sigmas = tf.exp(out[:,:,2:])
         means = out[:,:,:2]
         self.theta_log_likelihood =tf.div(tf.minimum(tf.square(
-            target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(means[:,:,0],self.rec_length)),
-            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(means[:,:,0],self.rec_length))),tf.tile(sigmas[:,:,0],self.rec_length))
+            target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length])),
+            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length]))),tf.tile(tf.expand_dims(sigmas[:,:,0],-1),[1,1,self.rec_length]))
         self.phi_log_likelihood =tf.div(tf.square(
-            target[:,:,:self.rec_length]*pi-pi*tf.tile(means[:,:,1],self.rec_length)),tf.tile(sigmas[:,:,1],self.rec_length))
+            target[:,:,:self.rec_length]*pi-pi*tf.tile(tf.expand_dims(means[:,:,1],-1),[1,1,self.rec_length])),tf.tile(tf.expand_dims(sigmas[:,:,1],-1),[1,1,self.rec_length]))
         self.MSE_theta = tf.reduce_mean(tf.minimum(tf.square(
-            target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(means[:,:,0],self.rec_length)),
-            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(means[:,:,0],self.rec_length))))
+            target[:,:,:self.rec_length]*2*pi-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length])),
+            tf.square(2*pi-2*pi*target[:,:,:self.rec_length]-2*pi*tf.tile(tf.expand_dims(means[:,:,0],-1),[1,1,self.rec_length]))))
         self.MSE_phi = tf.reduce_mean(tf.square(
-            target[:,:,self.rec_length:]*pi-pi*tf.tile(means[:,:,1],self.rec_length)))
+            target[:,:,self.rec_length:]*pi-pi*tf.tile(tf.expand_dims(means[:,:,1],-1),[1,1,self.rec_length])))
         NLL = self.theta_log_likelihood+self.phi_log_likelihood
         return NLL
 
     def initialize(self):
-        with tf.name_scope('summaries'):
-            tf.summary.scalar('total_loss',self.loss)
-            tf.summary.scalar('MSE_theta', self.MSE_theta)
-            tf.summary.scalar('MSE_phi', self.MSE_theta)
-            tf.summary.scalar('phi_log_likelihood', self.phi_log_likelihood)
-            tf.summary.scalar('theta_log_likelihood', self.theta_log_likelihood)
-        self.merged_summaries = tf.summary.merge_all()
-        self.train_writer = tf.summary.FileWriter(output_dir ,
-                                      self.sess.graph)
-
         self.sess.run(tf.global_variables_initializer())
 
 
@@ -134,13 +134,12 @@ class model(object):
         return out
 
     def train(self,  record_array,target_array):
-        else:
-            loss,summaries, _ = self.sess.run([self.loss, self.merged_summaries, self.apply_train], {self.target: target_array, self.input_record: record_array})
-        return loss,summaries
+        loss, _ = self.sess.run([self.loss, self.apply_train], {self.target: target_array, self.input_record: record_array})
+        return loss
 
 
 if __name__ == "__main__":
     Model = model(8)
     b = np.zeros((8,20,40))
     c= np.ones((8,20,40))
-    a = Model.train(a,b,c)
+    a = Model.train(b,c)
