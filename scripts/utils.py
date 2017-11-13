@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
 import numpy as np
 import scipy.misc
 import matplotlib.pyplot as plt
@@ -28,6 +27,81 @@ def nss_calc(gtsAnn, resAnn):
 
     return np.sum(a)/np.count_nonzero(a)
 
+def get_hit_rate(out,batch,a):
+    hit_rate = []
+    out[1][:,:] = np.sqrt(np.exp(out[1][:,:]))
+    out[1][:,0] = out[1][:,0]/(2*np.pi)
+    out[1][:,1] = out[1][:,1]/(np.pi)
+    for i in range (batch['target'].shape[0]):
+        x1 = out[0][i,0]-a*out[1][i,0]
+        y1 = out[0][i,1]-a*out[1][i,1]
+        x2 =  out[0][i,0]+a*out[1][i,0]
+        y2 = out[0][i,1]+a*out[1][i,1]
+        if x1<0:
+            x1 = 1+x1
+        if y1<0:
+            y1 = 0.0
+        if x2>1:
+            x2 = x2-1
+        if y2>1:
+            y2 = 1.0
+        h=0
+        for j in range(15):
+            x3 = batch['target'][i,j]-1/6.0
+            y3 = batch['target'][i,15+j]-0.25
+            x4 =  batch['target'][i,j]+1/6.0
+            y4 = batch['target'][i,15+j]+0.25
+            if x3<0:
+                x3 = 1+x3
+            if y3<0:
+                y3 = 0.0
+            if x4>1:
+                x4 = x4-1
+            if y4>1:
+                y4 = 1.0
+            dy = 0
+            if not(y3>y2 and y4<y1):
+                if y3>=y1 and y4<=y2:
+                    dy = y4-y3
+                elif y3<=y1 and y4<=y2 and y4>=y1:
+                    dy = y4-y1
+                elif y3>=y1 and y4>=y2 and y3<=y2:
+                    dy = y2-y3
+                else:
+                    dy = y2-y1
+            if x3>x4 :
+                x4+=1
+            if x1>x2:
+                x2+=1
+            dx = 0
+            if x4>1:
+                x42 = x4-1
+            else:
+                x42 = x4
+            if x2>1:
+                x22 = x2-1
+            else:
+                x22 =x2
+            if not(x3>x22 and x42<x1):
+                if x3>=x1 and x4<=x2:
+                    dx = x4-x3
+                elif x3<=x1 and x4<=x2 and x4>=x1:
+                    dx = x4-x1
+                elif x3>=x1 and x4>=x2 and x3<=x2:
+                    dx = x2-x3
+                else:
+                    dx = x2-x1
+            A = dx * dy
+            if A<0:
+                print (A,x1,x2,x3,x4,y1,y2,y3,y4)
+            A_sent = (x4-x3)*(y4-y3)
+            if A_sent<0:
+                print (A_sent,x3,x4,y3,y4)
+            if A>A_sent:
+                print ("How",A,A_sent,x1,x2,x3,x4,y1,y2,y3,y4)
+            h += float(A)/float(A_sent)
+        hit_rate.append(h/15)
+    return hit_rate
 
 
 def kld(pred,target):
@@ -429,4 +503,14 @@ def lab_to_rgb(lab):
             srgb_pixels = (rgb_pixels * 12.92 * linear_mask) + ((rgb_pixels ** (1/2.4) * 1.055) - 0.055) * exponential_mask
 
         return tf.reshape(srgb_pixels, tf.shape(lab))
+
+if __name__ =='__main__':
+    batch = {}
+    batch['target'] = np.zeros((1,30))
+    out = []
+    out.append(np.zeros((1,2)))
+    out.append(np.zeros((1,2)))
+    a=  get_hit_rate(out,batch,1.0)
+    print (a)
+
 
