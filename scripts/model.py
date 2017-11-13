@@ -63,10 +63,14 @@ class model(object):
 
     def def_loss(self, out, target):
         #loss = tf.reduce_sum(tf.square(target - out))/(self.batch_size*self.seq_length*self.rec_length*2)
-        self.MSE_theta = tf.reduce_mean(tf.minimum(tf.square(target[:, :, :self.rec_length] * 2 * pi - 2 * pi * out[:, :, :self.rec_length]),
-                                                   tf.square(2 * pi - 2 * pi * target[:, :, :self.rec_length] - 2 * pi * out[:, :, :self.rec_length])))
+        self.MSE_theta = tf.reduce_mean(tf.minimum(tf.square(target[ :, :self.rec_length] * 2 * pi -
+                                                             2 * pi * out[:,  :self.rec_length]),
+                                               tf.square(2 * pi - tf.abs(
+                                               2 * pi * target[:, :self.rec_length] -
+                                               2 * pi * out[:,
+                                                            :self.rec_length]))))
         self.MSE_phi = tf.reduce_mean(
-            tf.square(target[:, :, self.rec_length:] * pi - pi * out[:, :, self.rec_length:]))
+            tf.square(target[:, self.rec_length:] * pi - pi * out[:,self.rec_length:]))
         # self.theta_log_likelihood =tf.reduce_mean(tf.div(tf.minimum(tf.square(
         #     target[:,:self.rec_length]*2*pi-2*pi*tf.tile(tf.expand_dims(means[:,0],-1),[1,self.rec_length])),
         #     tf.square(2*pi-tf.abs(2*pi*target[:,:self.rec_length]-2*pi*tf.tile(tf.expand_dims(means[:,0],-1),[1,self.rec_length])))),tf.tile(tf.expand_dims(sigmas[:,0],-1),[1,self.rec_length])))
