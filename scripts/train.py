@@ -10,12 +10,12 @@ from tsing_bg import batch_generator
 from model import model
 import matplotlib.pyplot as plt
 
-mode = 'val'
-max_epoch = 2
+mode = 'train'
+max_epoch = 3
 batch_size = 64
-output_dir = '/scratch/kvg245/tsing_data/output/train_val3/'
+output_dir = '/scratch/kvg245/tsing_data/output/frame_16_MSE/'
 seed = 4
-ckpt = True
+ckpt = False
 
 save_freq = 6400
 val_freq = 1
@@ -57,7 +57,7 @@ if __name__ == "__main__":
             bg_val.current_epoch = 0
             bg_val.batch_index = 0
             batch = bg_val.get_batch_vec()
-            loss = [0,0,0,0,0,0,0]
+            loss = [0,0,0]
             iteration = 0
             while bg_val.current_epoch!=1:
                 loss_current = Model.forward(batch['record'],
@@ -105,15 +105,15 @@ if __name__ == "__main__":
             bg_val.current_epoch = 0
             bg_val.batch_index = 0
             batch = bg_val.get_batch_vec()
-            loss = [0,0,0,0,0,0,0]
+            loss = [0,0,0]
             iteration = 0
             # means_theta = []
             # means_phi = []
-            std_theta = []
-            std_phi = []
-            hit_rate_1 = []
-            hit_rate_2 = []
-            hit_rate_3 = []
+            # std_theta = []
+            # std_phi = []
+            # hit_rate_1 = []
+            # hit_rate_2 = []
+            # hit_rate_3 = []
             while bg_val.current_epoch!=1:
                 loss_current = Model.forward(batch['record'],
                                      batch['target'])
@@ -121,19 +121,18 @@ if __name__ == "__main__":
                 loss_current = loss_current[:-1]
                 out = loss_current[0]
                 #print get_hit_rate(out,batch,1.0)
-                hit_rate_1 = hit_rate_1 +list(get_hit_rate(out,batch,1.0))
-                hit_rate_2 = hit_rate_2 + list(get_hit_rate(out,batch,1.5))
-                hit_rate_3 = hit_rate_3 + list(get_hit_rate(out,batch,2.0))
+                # hit_rate_1 = hit_rate_1 +list(get_hit_rate(out,batch,1.0))
+                # hit_rate_2 = hit_rate_2 + list(get_hit_rate(out,batch,1.5))
+                # hit_rate_3 = hit_rate_3 + list(get_hit_rate(out,batch,2.0))
                 # means_theta = means_theta+list(np.square(out[0][:,0]-np.mean(batch['target'][:,:20])))
                 # means_phi = means_phi+list(np.square(out[0][:,1]-np.mean(batch['target'][:,20:])))
-                std_theta = std_theta + list(np.square(np.exp(out[1][:,0])-np.square(np.std(batch['target'][:,:20]))))
-                std_phi = std_phi + list(np.square(np.exp(out[1][:,1])-np.square(np.std(batch['target'][:,20:]))))
+                # std_theta = std_theta + list(np.square(np.exp(out[1][:,0])-np.square(np.std(batch['target'][:,:20]))))
+                # std_phi = std_phi + list(np.square(np.exp(out[1][:,1])-np.square(np.std(batch['target'][:,20:]))))
                 loss = [x + y for x, y in zip(loss_current[1:],loss)]
                 batch = bg_val.get_batch_vec()
                 iteration+=1
                 loss_print = [x / iteration for x in loss]
-            print "val_loss",i,sum(hit_rate_1) / float(len(hit_rate_1)),sum(hit_rate_2) / float(len(hit_rate_2)),sum(hit_rate_3) / float(len(hit_rate_3)),sum(std_theta) / float(len(std_theta)),sum(std_phi) / float(len(std_phi))
-            print loss_print
+            print i,loss_print
 
             # plt.title('Video'+str(i))
             # plt.figure(i)
