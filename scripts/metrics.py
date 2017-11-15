@@ -14,13 +14,13 @@ def get_hit_rate(out,batch,a):
     hit_rate = []
     out[1][:,:] = np.sqrt(np.exp(out[1][:,:]))
     out[1][:,0] = np.clip(out[1][:,0]/(2*np.pi),None,0.5)
-    out[1][:,1] = np.clip(out[1][:,1]/(np.pi),None,2.0/3.0)
+    out[1][:,1] = np.clip(out[1][:,1]/(np.pi),None,0.5)
     for i in range (batch['target'].shape[0]):
         f1=0
-        x1 = out[0][i,0]-a*out[1][i,0]/2
-        y1 = out[0][i,1]-a*out[1][i,1]/2
-        x2 = out[0][i,0]+a*out[1][i,0]/2
-        y2 = out[0][i,1]+a*out[1][i,1]/2
+        x1 = out[0][i,0]-1/6.0-a*out[1][i,0]/2
+        y1 = out[0][i,1]-0.25-a*out[1][i,1]/2
+        x2 = out[0][i,0]+1/6.0+a*out[1][i,0]/2
+        y2 = out[0][i,1]+0.25+a*out[1][i,1]/2
         orect = (x1,y1,x2,y2)
         if x1<0:
             x1 = 1+x1

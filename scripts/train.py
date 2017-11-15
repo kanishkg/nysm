@@ -100,7 +100,7 @@ if __name__ == "__main__":
         Model = model(batch_size,ckpt =ckpt,output_dir=output_dir)
         l = 0
 
-        for i in range(0,18):
+        for i in range(12,18):
             bg_val = batch_generator(batch_size,calc_vid=[i],istrain = False)
             bg_val.current_epoch = 0
             bg_val.batch_index = 0
@@ -129,7 +129,9 @@ if __name__ == "__main__":
                 std_theta = std_theta + list(np.square(np.exp(out[1][:,0])-np.square(np.std(batch['target'][:,:20]))))
                 std_phi = std_phi + list(np.square(np.exp(out[1][:,1])-np.square(np.std(batch['target'][:,20:]))))
                 loss = [x + y for x, y in zip(loss_current[1:],loss)]
+                bg_val.batch_index+=bg_val.fps[i]
                 batch = bg_val.get_batch_vec()
+
                 iteration+=1
                 loss_print = [x / iteration for x in loss]
             print "val_loss",i,sum(hit_rate_1) / float(len(hit_rate_1)),sum(hit_rate_2) / float(len(hit_rate_2)),sum(hit_rate_3) / float(len(hit_rate_3)),sum(std_theta) / float(len(std_theta)),sum(std_phi) / float(len(std_phi))
